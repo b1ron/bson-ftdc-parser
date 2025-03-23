@@ -38,6 +38,7 @@ function dump(buffer, maxLength = 8) {
     output.ascii += String.fromCharCode(buffer[i]);
   }
 
+  delete output.sp;
   return output;
 }
 
