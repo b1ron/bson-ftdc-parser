@@ -7,8 +7,6 @@ try {
   console.log(dump(data));
   data = fs.readFileSync('files/metrics.2021-03-15T02-21-47Z-00000');
   console.log(dump(data));
-// { sp: '', hex: '25 50 44 46 2d 31 2e 34', ascii: '%PDF-1.4' }
-// { sp: '', hex: 'e5 2f 00 00 09 5f 69 64', ascii: 'å/\x00\x00\t_id' }
 } catch (err) {
   console.error(err);
 }
@@ -21,6 +19,8 @@ try {
 // >5	byte		x		\b, version %c
 // >7	byte		x		\b.%c
 // >0	use		pdf
+//
+// { sp: '', hex: 'e5 2f 00 00 09 5f 69 64', ascii: 'å/\x00\x00\t_id' } - FTDC data file
 
 // An xxd-like function to dump the first 8 bytes of a buffer in hex and ASCII.
 function dump(buffer, maxLength = 8) {
