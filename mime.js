@@ -1,68 +1,46 @@
-// MIME type detection
+// FTDC quick parser
 
-const fs = require('node:fs');
+import * as BSON from './constants.js';
+import fs from 'fs';
 
-try {
-  let data = fs.readFileSync('files/small.pdf');
-  console.log(dump(data));
-  data = fs.readFileSync('files/metrics.2021-03-15T02-21-47Z-00000');
-  console.log(dump(data));
-} catch (err) {
-  console.error(err);
+class BSONError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'BSONError';
+  }
 }
 
-// { sp: '', hex: '25 50 44 46 2d 31 2e 34', ascii: '%PDF-1.4' } - PDF file with magic pattern string at offset 0 and version at offset 5
-// 0	string		%PDF-		PDF document
-// !:mime	application/pdf
-// !:strength +60
-// !:ext	pdf
-// >5	byte		x		\b, version %c
-// >7	byte		x		\b.%c
-// >0	use		pdf
-//
-// { sp: '', hex: 'e5 2f 00 00 09 5f 69 64', ascii: 'å/\x00\x00\t_id' } - FTDC data file
+// readFTDCFile reads a BSON file to quicky determine if it's an actual FTDC file.
+function readFTDCFile(filename) {
+  let buffer = fs.readFileSync(filename);
+  const size = buffer.readUInt32LE(0);
+  buffer = buffer.subarray(0, size);
+  if (size < 5) {
+    throw new BSONError('Invalid BSON size');
+  }
+  if (buffer[size - 1] !== 0) {
+    throw new BSONError('Invalid BSON terminator');
+  }
 
-// An xxd-like function to dump the first 8 bytes of a buffer in hex and ASCII.
-function dump(buffer, maxLength = 8) {
-  let output = {
-    sp: ' ',
-    hex: '',
-    ascii: '',
-  };
-  for (let i = 0; i < maxLength; i++) {
-    const hex = parseInt(buffer[i], 10).toString(16);
-    if (i >= maxLength-1) {
-      output.sp = '';
+  let index = 4;
+
+  const elementType = buffer[index++];
+  switch (elementType) {
+  case BSON.DATA_NUMBER:
+  case BSON.DATA_DATE:
+    // locate the end of the c string
+    let i = index;
+    while (buffer[i] !== 0x00 && i < buffer.length) {
+      i++;
     }
-    output.hex += hex.padStart(2, '0') + output.sp;
-    output.ascii += String.fromCharCode(buffer[i]);
+    index = i + 1;
+  
+    const data = buffer.subarray(index, index + 8);
+    const bigint = data.readBigInt64LE(0);
+    const date = new Date(Number(bigint));
+    console.log(date); // 2021-03-15T02:21:48.000Z
   }
 
-  delete output.sp;
-  return output;
 }
 
-// A re-implementation of the Unix strings command.
-function strings(buffer, minLength = 4) {
-  const printableChars = /^[\x20-\x7E]+$/; // ASCII printable characters
-  let result = [];
-  let currentString = '';
-  
-  for (let i = 0; i < buffer.length; i++) {
-    const char = String.fromCharCode(buffer[i]);
-    if (printableChars.test(char)) {
-      currentString += char;
-    } else {
-      if (currentString.length >= minLength) {
-        result.push(currentString);
-      }
-      currentString = '';
-    }
-  }
-  
-  if (currentString.length >= minLength) {
-    result.push(currentString);
-  }
-  
-  return result.join('\n');
-}
+readFTDCFile('files/metrics.2021-03-15T02-21-47Z-00000');
