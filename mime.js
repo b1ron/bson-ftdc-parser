@@ -40,7 +40,8 @@ function indexBeforeColon(stream, offset = 0) {
 }
 
 /**
- * Reads a BSON file to quicky determine if it's an FTDC file.
+ * Reads a BSON file to quicky determine if it's an FTDC file by terminating 
+ * early upon finding specific fields or keywords.
  *
  * @param {string} filename - The file to read
  * @returns {boolean} true if the file is an FTDC file
