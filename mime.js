@@ -1,5 +1,5 @@
 // FTDC quick parser
-
+// Archive File Format - https://github.com/mongodb/mongo/blob/0a68308f0d39a928ed551f285ba72ca560c38576/src/mongo/db/ftdc/README.md#archive-file-format
 import * as BSON from './constants.js';
 import fs from 'fs';
 
@@ -24,7 +24,7 @@ class BSONError extends Error {
  *
  * 
  * FIXME: This function is not working as expected, it never seems to find the colon 
- * and always returns null.
+ * and always returns null. It is likely that the buffer is not being read correctly.
  */
 function indexBeforeColon(stream, offset = 0) {
   if (!stream || stream.length === 0) {
@@ -40,7 +40,7 @@ function indexBeforeColon(stream, offset = 0) {
 }
 
 /**
- * Reads a BSON file to quicky determine if it's an actual FTDC file.
+ * Reads a BSON file to quicky determine if it's an FTDC file.
  *
  * @param {string} filename - The file to read
  * @returns {boolean} true if the file is an FTDC file
@@ -78,8 +78,6 @@ function readFTDCFile(filename) {
     switch (elementType) {
     case BSON.DATA_NUMBER:
       console.log('Number');
-      const i = indexBeforeColon(buffer, index);
-      console.log(index, i);
     case BSON.DATA_STRING:
       console.log('String');
     case BSON.DATA_OBJECT:
