@@ -1,5 +1,6 @@
 // FTDC quick parser
 // Archive File Format - https://github.com/mongodb/mongo/blob/0a68308f0d39a928ed551f285ba72ca560c38576/src/mongo/db/ftdc/README.md#archive-file-format
+
 import * as BSON from './constants.js';
 import fs from 'fs';
 
