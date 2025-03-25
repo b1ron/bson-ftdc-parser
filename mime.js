@@ -1,9 +1,13 @@
 // FTDC quick parser
 
-import { get } from 'http';
 import * as BSON from './constants.js';
 import fs from 'fs';
 
+/**
+ * Error class for BSON parsing errors.
+ * @class
+ * @extends Error
+*/
 class BSONError extends Error {
   constructor(message) {
     super(message);
@@ -11,14 +15,16 @@ class BSONError extends Error {
   }
 }
 
-
-
 /**
  * Finds the index before the first occurrence of ':' in the stream.
  *
  * @param {string|Buffer} stream - The internal serialization buffer.
  * @param {number} offset - The starting position for the search.
  * @returns {number|null} - The index before ':' or null if not found.
+ *
+ * 
+ * FIXME: This function is not working as expected, it never seems to find the colon
+  and always returns null.
  */
 function indexBeforeColon(stream, offset = 0) {
   if (!stream || stream.length === 0) {
