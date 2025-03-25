@@ -23,8 +23,8 @@ class BSONError extends Error {
  * @returns {number|null} - The index before ':' or null if not found.
  *
  * 
- * FIXME: This function is not working as expected, it never seems to find the colon
-  and always returns null.
+ * FIXME: This function is not working as expected, it never seems to find the colon 
+ * and always returns null.
  */
 function indexBeforeColon(stream, offset = 0) {
   if (!stream || stream.length === 0) {
