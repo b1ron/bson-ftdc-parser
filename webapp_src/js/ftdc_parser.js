@@ -4,7 +4,39 @@
 import * as BSON from './bson_constants.js';
 
 /**
+ * ExtendedArrayBuffer class to provide additional functionality for reading
+ * BSON files.
+ * 
+ * @class
+ * @extends ArrayBuffer
+ * @param {Buffer} buffer - The buffer to extend.
+ * @returns {ExtendedArrayBuffer} - The extended buffer.
+ * 
+ * TODO: more methods to be added as needed.
+*/
+class ExtendedArrayBuffer extends ArrayBuffer {
+  constructor(buffer) {
+    super(buffer);
+    this.buffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+    this.view = new DataView(this.buffer);
+  }
+
+  readUInt32LE(offset) {
+    return this.view.getUint32(offset, true);
+  }
+
+  readBigInt64LE(offset) {
+    return this.view.getBigInt64(offset, true);
+  }
+
+  getRawBuffer() {
+    return this.buffer;
+  }
+}
+
+/**
  * Error class for BSON parsing errors.
+ *
  * @class
  * @extends Error
 */
@@ -22,11 +54,10 @@ class BSONError extends Error {
  * @param {number} offset - The starting position for the search.
  * @returns {number|null} - The index before ':' or null if not found.
  *
- * 
  * FIXME: This function is not working as expected, it never seems to find the colon 
  * and always returns null. It is likely that the buffer is not being read correctly.
  */
-const indexBeforeColon = (stream, offset = 0) => {
+function indexBeforeColon(stream, offset = 0) {
   if (!stream || stream.length === 0) {
     return null;
   }
@@ -37,7 +68,7 @@ const indexBeforeColon = (stream, offset = 0) => {
   }
 
   return i < stream.length ? i - 1 : null; // return index before ':', or null if not found
-};
+}
 
 /**
  * Reads a BSON file to quicky determine if it's an FTDC file by terminating 
@@ -49,11 +80,14 @@ const indexBeforeColon = (stream, offset = 0) => {
 const readFTDCFile = async (uri) => {
   const ffResp = await fetch(uri);
   const blob = await ffResp.blob();
-  // Could be .stream(), or bytes() instead. Going with ArrayBuffer for now.
-  let buffer = await blob.arrayBuffer();
+  // Devnote: On Blob we can also use .stream(), or .arrayBuffer().
+  // Going with bytes() for now. Which is a Uint8Array 
+  const buffer = await blob.bytes();
 
-  const size = buffer.readUInt32LE(0);
-  buffer = buffer.subarray(0, size);
+  let arrayBuffer = new ExtendedArrayBuffer(buffer);
+  //assert.equal(arrayBuffer instanceof ArrayBuffer, true);
+  const size = arrayBuffer.readUInt32LE(0);
+
   if (size < 5) {
     throw new BSONError('Invalid BSON size');
   }
@@ -70,8 +104,6 @@ const readFTDCFile = async (uri) => {
       continue;
     }
 
-
-    console.log('field:', indexBeforeColon(buffer, index));
 
     // locate the end of the c string
     let i = index;
@@ -99,14 +131,14 @@ const readFTDCFile = async (uri) => {
         console.log('Boolean');
       case BSON.DATA_DATE:
         const data = buffer.subarray(index, index + 8);
-        const bigInt = data.readBigInt64LE(0);
+        const bigInt = arrayBuffer.readBigInt64LE(0);
         const date = new Date(Number(bigInt));
         console.log(date);
 
         index += 8;
 
       case BSON.DATA_NULL:
-        console.log('Null', index);
+        console.log('Null');
       case BSON.DATA_REGEXP:
         console.log('RegExp');
       case BSON.DATA_DBPOINTER:
@@ -129,9 +161,9 @@ const readFTDCFile = async (uri) => {
         console.log('MinKey');
     }
   }
-};
 
-readFTDCFile('files/metrics.2021-03-15T02-21-47Z-00000');
+  return true;
+};
 
 export {
   readFTDCFile,

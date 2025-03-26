@@ -1,13 +1,15 @@
-//AKIRA broken on buffer.readUInt32LE atm: import { readFTDCFile } from './ftdc_parser.js';
+import { readFTDCFile } from './ftdc_parser.js';
 
 let addFetchItBtn;
 let debugPaneDiv;
 
 const fetchFtdcAndDisplay = async () => {
-    //AKIRA broken on buffer.readUInt32LE atm:  readFTDCFile('/files/metrics.2021-03-15T02-21-47Z-00000');
-    let x = await fetch('/files/metrics.2021-03-15T02-21-47Z-00000');
-    let y = await x.text();
-    console.log(y);
+    const hostPrefix = "https://lfs-example-files-202503.s3.ap-northeast-1.amazonaws.com/";
+    const fpath = "wt_internals_training/diagnostic.data/metrics.2021-03-11T08-20-52Z-00000";
+    readFTDCFile(`${hostPrefix}${fpath}`);
+    //let x = await fetch(`${hostPrefix}${fpath}`);
+    //let y = await x.text();
+    //console.log(y);
     debugPaneDiv.innerText = "adfsfasdfa";
 };
 
