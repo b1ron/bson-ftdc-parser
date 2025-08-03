@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title>Canvas tutorial</title>
+    <style>
+      canvas {
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="800" height="400"></canvas>
+    <script type="module">
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const worker = new Worker("worker.js", { type: "module" });
+
+      const response = await fetch("files/diagnostic.data/metrics.2025-07-10T15-58-48Z-00000");
+      const buffer = await response.arrayBuffer();
+      worker.postMessage(buffer, [buffer]);
+
+      const padding = 50;
+      const width = canvas.width;
+      const height = canvas.height;
+
+      async function run() {
+        return new Promise(resolve => {
+          worker.onmessage = (e) => {
+            resolve(e.data);
+          };
+        });
+      }
+      
+      let samples = await run();
+
+      const min = (numbers) => {
+        let curr = BigInt(Number.MAX_VALUE);
+        for (const n of numbers) {
+          if (n < curr) {
+            curr = n;
+          }
+        }
+        return Number(curr);
+      }
+
+      const max = (numbers) => {
+        let curr = 0n;
+        for (const n of numbers) {
+          if (n > curr) {
+            curr = n;
+          }
+        }
+        return Number(curr);
+      }
+
+      const keyX = 'start';
+      const keyY = 'serverStatus.wiredTiger.cache.tracked dirty bytes in the cache';
+
+      const minX = min(samples[keyX]);
+      const maxX = max(samples[keyX]);
+      const minY = min(samples[keyY]);
+      const maxY = max(samples[keyY]);
+      const scaleX = (x) => {
+        const scaled = padding + (Number(x) - minX)*(width - padding) / (maxX - minX);
+        return Math.min(width - padding, scaled);
+      }
+      const scaleY = (y) => {
+        return height - padding - (Number(y) - minY)*(height - padding * 2.0) / (maxY - minY);
+      }
+
+      const data = [];
+      for (let i = 0; i < samples.start.length; i++) {
+        data.push({x: scaleX(samples[keyX][i]), y: scaleY(samples[keyY][i])});
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(padding, height - padding);
+
+      // begin graph
+      data.forEach((entry, point) => {
+        ctx.lineTo(entry.x, entry.y);
+      });
+      ctx.stroke();
+    </script>
+  </body>
+</html>
+
