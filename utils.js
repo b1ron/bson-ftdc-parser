@@ -114,51 +114,6 @@ export const readBigInt64LE = function (buffer, offset = 0) {
   );
 };
 
-// uses LEB128
-function decodeVarint(buffer) {
-  let current = 0n;
-  let i = 0;
-  let shift = 0n;
-  let byte = buffer[i];
-  if (byte === undefined) {
-    throw new RangeError('Buffer index is out of bounds');
-  }
-
-  // indicates a continuation bit (MSB = 1)
-  while (byte >= 128) {
-    current += BigInt(byte & 127) * (1n << shift); // extract 7 bits and shift
-    shift += 7n;
-    byte = buffer[++i];
-    // prevent reading more than 10 bytes
-    if (i >= 9) {
-      current = 0n;
-      return { current, i };
-    }
-  }
-
-  i++;
-  current += BigInt(byte) * (1n << shift);
-  return { current, i };
-}
-
-export const createBufferReader = function (buffer) {
-  return {
-    decodeVarint() {
-      const v = decodeVarint(buffer);
-      buffer = buffer.slice(v.i);
-      return v.current;
-    },
-    readUint32LE() {
-      const v = readUint32LE(buffer);
-      buffer = buffer.slice(4);
-      return v;
-    },
-    isEmpty() {
-      return buffer.length === 0;
-    },
-  };
-};
-
 export const toString = function () {
   return new TextDecoder('utf-8').decode(this);
 };
@@ -169,9 +124,4 @@ export const toHex = function (buffer, separator = '') {
 
 export const toBase64 = function (buffer) {
   return btoa(buffer.toString());
-};
-
-// TODO: remove
-export const log = function (...message) {
-  console.log(...message);
 };
