@@ -73,7 +73,9 @@ export const parseBSON = function (buffer, options = { FTDC: false }) {
 
     // only parse key if the current context is an object, not an array
     if (!isArray) {
-      key = buffer.subarray(index, indexAfterCString(buffer, index) - 1).toString();
+      key = buffer
+        .subarray(index, indexAfterCString(buffer, index) - 1)
+        .toString();
     }
 
     index = indexAfterCString(buffer, index);
@@ -126,13 +128,13 @@ export const parseBSON = function (buffer, options = { FTDC: false }) {
 
         value = buffer
           .subarray(index, index + size)
-          .map((b) => b.toString(16))
+          .map(b => b.toString(16))
           .join('');
         put(currentObj, key, value);
 
         // return the metrics chunk for further parsing
         if (options.FTDC) {
-          value = buffer.subarray(index + 8 + 1, index + size + 5); 
+          value = buffer.subarray(index + 8 + 1, index + size + 5);
           put(currentObj, key, value);
           return object;
         }
