@@ -1,3 +1,3 @@
 ## BSON parser and FTDC decoder
 
-A full BSON parser FTDC (Full-Time Diagnostic Data Capture) decoder written in plain JavaScript. Includes a (WIP) _very_ basic visualization for time-series metric data with no external dependencies.
+A full BSON parser [FTDC](https://www.mongodb.com/docs/manual/administration/full-time-diagnostic-data-capture/) (Full-Time Diagnostic Data Capture) decoder written in plain JavaScript. Includes a (WIP) _very_ basic visualization for time-series metric data with no external dependencies.
