@@ -48,8 +48,6 @@ export const uncompress = async function (compressed) {
     buffer = buffer.subarray(size, buffer.length)
     refDoc = flattenObject(refDoc)
 
-    const reader = utils.createBufferReader(buffer)
-
     const numMetrics = utils.readUint32LE(buffer)
     const numSamples = utils.readUint32LE(buffer, 4)
     buffer = buffer.subarray(4 + 4)
@@ -68,13 +66,12 @@ export const uncompress = async function (compressed) {
     const keys = Object.keys(refDoc)
     let zeroCount = 0
 
-    const obj = { ...refDoc }
     for (let i = 0; i < numMetrics; i++) {
       const key = keys[i]
       if (samples[key] === undefined) {
         samples[key] = []
       }
-      const deltas = [obj[key]]
+      const deltas = [refDoc[key]]
       let prev = deltas[0]
       for (let j = 0; j < numSamples; j++) {
         if (zeroCount > 0) {
@@ -82,10 +79,10 @@ export const uncompress = async function (compressed) {
           zeroCount--
           continue
         }
-        let { value, read } = decodeVarint(buffer, keys[i])
+        let { value, read } = decodeVarint(buffer)
         buffer = buffer.subarray(read)
         if (value === 0n) {
-          let { value, read } = decodeVarint(buffer, keys[i])
+          let { value, read } = decodeVarint(buffer)
           buffer = buffer.subarray(read)
           zeroCount = value
         } else {
@@ -102,7 +99,7 @@ export const uncompress = async function (compressed) {
 }
 
 // uses LEB128
-function decodeVarint(buffer, key) {
+function decodeVarint(buffer) {
   let i = 0
   let shift = 0n
   let value = 0n
